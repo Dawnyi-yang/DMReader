@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.dmreader.mapper.GoodMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.example.dmreader.pojo.Good">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="spec" property="spec" />
+        <result column="sptm" property="sptm" />
+        <result column="vlidity" property="vlidity" />
+        <result column="scrq" property="scrq" />
+        <result column="benchid" property="benchid" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, name, spec, sptm, vlidity, scrq, benchid
+    </sql>
+
+</mapper>

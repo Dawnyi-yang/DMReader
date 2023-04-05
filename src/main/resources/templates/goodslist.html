@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>订单详情</title>
+
+    <script type="text/javascript" src="/js/jquery.min.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="/bootstrap/css/bootstrap.min.css"/>
+    <script type="text/javascript" src="/bootstrap/js/bootstrap.min.js"></script>
+
+    <script type="text/javascript" src="/layer/layer.js"></script>
+
+    <script type="text/javascript" src="/js/common.js"></script>
+</head>
+<body>
+<div class="panel panel-default">
+    <div class="panel-heading">产品详情</div>
+    <div class="panel-body">
+        <span th:if="${user eq null}"> 您还没有登录，请登陆后再操作<br/></span>
+
+    </div>
+    <table class="table" id="goodsList">
+        <tr>
+            <td>订单号</td>
+            <td>产品名称</td>
+            <td>产品规格</td>
+            <td>产品条码</td>
+            <td>产品数量</td>
+        </tr>
+        <tr th:each="goods,goodsStat : ${goodsList}">
+            <td th:text="${goods.Docnum}"></td>
+            <td th:text="${goods.name}"></td>
+            <td th:text="${goods.spec}"></td>
+            <td th:text="${goods.sptm}"></td>
+            <td th:text="${goods.Num}"></td>
+        </tr>
+        <tr>
+            <td>
+                <input type="hidden" id="margin">
+                <span id="margin1"></span>
+            </td>
+            <td>
+                <input type="hidden" id="margin2">
+                <span id="margin3"></span>
+            </td>
+            <td>
+                <input type="hidden" >
+                <span ></span>
+            </td>
+            <td>
+                <input type="hidden" >
+                <span ></span>
+            </td>
+
+            <td>
+                <form id="outBoundForm" method="post" action="/orders/doOutBound">
+                        <input type="hidden" name="docnum" th:value="${docnum}">
+                        <button class="btn btn-primary" type="submit" id="buyButton">确认出库
+                        </button>
+                </form>
+            </td>
+        </tr>
+
+    </table>
+</div>
+</body>
+<script>
+    $(function () {
+        // countDown();
+        //Outbound()
+        var docnum = $("#docnum").val();
+    });
+
+    function refreshCaptcha() {
+        $("#captchaImg").attr("src", "/seckill/captcha?goodsId=" + $("#goodsId").val() + "&time=" + new Date());
+    }
+
+    function Outbound(){
+        var docnum = $("#docnum").val();
+        g_showLoading();
+        $.ajax({
+            url: "/outBound/doOutBound",
+            type: "GET",
+            data:{
+                docnum:docnum
+            },
+            success: function (data) {
+                if (data.code == 200) {
+                    //doOutBound();
+                    layer.msg("成功");
+                    window.location.href = "/orders/toList";
+                } else {
+                    layer.msg(data.message);
+                }
+            },
+            error: function () {
+                layer.msg("客户端请求错误");
+            }
+        });
+    }
+    function Outbound1() {
+        var docnum = $("#docnum").val();
+        var captcha = $("#captcha").val();
+        g_showLoading();
+        $.ajax({
+            url: "/outBound/path",
+            type: "GET",
+            data: {
+                goodsId: goodsId,
+                captcha:captcha
+            },
+            success: function (data) {
+                if (data.code == 200) {
+                    var path = data.object;
+                    doOutBound(path);
+                } else {
+                    layer.msg(data.message);
+                }
+            },
+            error: function () {
+                layer.msg("客户端请求错误");
+            }
+        });
+    }
+
+
+    //秒杀方法
+    function doSecKill(path) {
+        $.ajax({
+            url: 'seckill/' + path + '/doSeckill',
+            type: "POST",
+            data: {
+                goodsId: $('#goodsId').val()
+            },
+            success: function (data) {
+                if (data.code == 200) {
+                    // window.location.href="/goodslist.html?orderId="+data.object.id;
+                    getResult($("#goodsId").val());
+                } else {
+                    layer.msg(data.message);
+                }
+            }, error: function () {
+                layer.msg("客户端请求出错");
+            }
+
+        });
+    }
+
+    function getResult(goodsId) {
+        g_showLoading();
+        $.ajax({
+            url: "/seckill/getResult",
+            type: "GET",
+            data: {
+                goodsId: goodsId
+            },
+            success: function (data) {
+                if (data.code == 200) {
+                    var result = data.object;
+                    if (result < 0) {
+                        layer.msg("对不起，秒杀失败");
+                    } else if (result == 0) {
+                        setTimeout(function () {
+                            getResult(goodsId)
+                        });
+                    } else {
+                        layer.confirm("恭喜您，秒杀成功！查看订单？", {btn: ["确定", "取消"]},
+                            function () {
+                                window.location.href = "/orderDetail.html?orderId=" + result;
+                            },
+                            function () {
+                                layer.close();
+                            }
+                        )
+                    }
+                }
+            },
+            error: function () {
+                layer.msg("客户端请求错误");
+            }
+        });
+    }
+
+    function getDetails() {
+        var ordersId = g_getQueryString("docnum");
+        console.log(ordersId);
+        $.ajax({
+            url: '/orderdeatil/' + ordersId,
+            type: 'GET',
+            success: function (data) {
+                if (data.code == 200) {
+                    render(data.object);
+                    //countDown();
+                } else {
+                    layer.msg("客户端请求出错");
+                }
+            },
+            error: function () {
+                layer.msg("客户端请求出错");
+            }
+        })
+    }
+
+    function render(detail) {
+        var user = detail.tuser;
+        var goodsVo = detail.goodsVo;
+
+        if (user) {
+            $("#userTip").hide();
+        }
+        /*$("#goodsName").text(goodsVo.name);
+        $("#goodsImg").attr("src", goodsVo.goodsImg);
+        $("#startTime").text(new Date(goodsVo.startDate).format("yyyy-MM-dd HH:mm:ss"));
+        $("#remainSeconds").val(remainSeconds);
+        $("#goodsId").val(goodsVo.id);
+        $("#goodsPrice").text(goodsVo.seckillPrice);
+        $("#stockCount").text(goodsVo.stockCount);*/
+
+    }
+
+    function countDown() {
+        var remainSeconds = $("#remainSeconds").val();
+        $("#buyButton").attr("disabled", true);
+
+
+    };
+
+</script>
+</html>

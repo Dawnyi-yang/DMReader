@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.dmreader.mapper.OrdersMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.example.dmreader.pojo.Orders">
+        <id column="id" property="id" />
+        <result column="Docnum" property="Docnum" />
+        <result column="Crdid" property="Crdid" />
+        <result column="Crdname" property="Crdname" />
+        <result column="addr" property="addr" />
+        <result column="num" property="num" />
+        <result column="state" property="state" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, Docnum, Crdid, Crdname, addr, num, state
+    </sql>
+    <select id="findOrderVo" resultType="com.example.dmreader.vo.OrderVo">
+        select t_orders.Docnum,t_orders.Crdname,t_orders.addr,t_orders.num
+        from t_orders
+        where t_orders.state=0
+    </select>
+    <select id="findOrderVoByOrderNum" resultType="com.example.dmreader.vo.OrderVo">
+        select t_orders.Docnum,t_orders.Crdname,t_orders.addr,t_orders.num,t_orders.state
+        from t_orders
+        where t_orders.Docnum=#{docnum}
+    </select>
+    <select id="findGoodVoByOrderNum" resultType="com.example.dmreader.vo.GoodVo">
+        select o.Docnum,g.id,g.name,g.spec,g.sptm,g.vlidity,g.scrq,g.benchid,ord.num
+        from t_orders o left join orderdeatil ord on o.Docnum=ord.Docnum left join good g on ord.goodid=g.id
+        where o.Docnum=#{docnum}
+    </select>
+    <select id="outBound" resultType="com.example.dmreader.vo.GoodVo">
+        UPDATE t_orders
+        SET state=2
+        WHERE Docnum=#{docnum}
+    </select>
+    <select id="preBound" resultType="com.example.dmreader.vo.GoodVo">
+        UPDATE t_orders
+        SET state=1
+        WHERE Docnum=#{docnum}
+    </select>
+
+</mapper>
